@@ -29,7 +29,7 @@ async function bootstrap() {
   // Use Vercel's PORT environment variable or default to 3000
   const port = process.env.PORT || appConfig.port || 3000;
   await app.listen(port);
-  
+
   // Log the port for debugging
   console.log(`Application is running on: ${await app.getUrl()}`);
 }
