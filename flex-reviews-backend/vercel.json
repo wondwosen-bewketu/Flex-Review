@@ -15,10 +15,5 @@
       "dest": "src/main.ts",
       "methods": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"]
     }
-  ],
-  "env": {
-    "HOSTAWAY_ACCOUNT_ID": "@hostaway_account_id",
-    "HOSTAWAY_API_KEY": "@hostaway_api_key",
-    "GOOGLE_PLACES_API_KEY": "@google_places_api_key"
-  }
+  ]
 }
