@@ -1,255 +1,229 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import axios from 'axios';
-import type { NormalizedReview } from '../types';
-
-const API_BASE = 'http://localhost:3000';
+import React, { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
+import axios from "axios";
+import type { NormalizedReview, Property } from "../types";
+import PropertyDetails from "../components/PropertyPage/PropertyDetails";
+import SelectedReviews from "../components/PropertyPage/SelectedReviews";
+import {
+  FiLoader,
+  FiStar,
+  FiTrendingUp,
+  FiBarChart2,
+  FiHome,
+} from "react-icons/fi";
+import { API_BASE } from "../config/api.config";
 
 const PropertyPage: React.FC = () => {
   const { listingName } = useParams<{ listingName: string }>();
   const [reviews, setReviews] = useState<NormalizedReview[]>([]);
+  const [property, setProperty] = useState<Property | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedTab, setSelectedTab] = useState<"all" | "positive" | "recent">(
+    "all"
+  );
 
   useEffect(() => {
-    fetchReviews();
+    fetchData();
   }, [listingName]);
 
-  const fetchReviews = async () => {
+  const fetchData = async () => {
     try {
       setLoading(true);
-      const { data } = await axios.get(`${API_BASE}/api/reviews/hostaway`);
-      // Filter reviews for this specific property
-      const propertyReviews = data.reviews.filter(
-        (review: NormalizedReview) => review.listingName === decodeURIComponent(listingName || '')
+
+      const { data: reviewsData } = await axios.get(
+        `${API_BASE}/api/reviews/hostaway`
       );
-      setReviews(propertyReviews);
+      const propertyReviews = reviewsData.reviews.filter(
+        (review: NormalizedReview) =>
+          review.listingName === decodeURIComponent(listingName || "")
+      );
+
+      const { data: selectedData } = await axios.get(
+        `${API_BASE}/api/reviews/selected/${encodeURIComponent(listingName || "")}`
+      );
+      const selectedReviewIds = new Set(selectedData.reviewIds);
+
+      const selectedReviews = propertyReviews.filter(
+        (review: NormalizedReview) => selectedReviewIds.has(review.id)
+      );
+
+      setReviews(selectedReviews);
+
+      setProperty({
+        name: decodeURIComponent(listingName || ""),
+        description:
+          "An exquisite urban sanctuary blending modern elegance with timeless comfort. Perfect for discerning travelers seeking sophistication.",
+        image:
+          "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80",
+        amenities: [
+          "High-Speed WiFi",
+          "Smart AC",
+          "Gourmet Kitchen",
+          "Rooftop View",
+        ],
+      });
     } catch (err) {
-      console.error('Failed to fetch reviews:', err);
+      console.error("Failed to fetch:", err);
     } finally {
       setLoading(false);
     }
   };
 
-  // Calculate statistics
-  const calculateStats = () => {
-    const totalReviews = reviews.length;
-    const avgRating = totalReviews > 0 
-      ? reviews.reduce((sum, review) => sum + (review.overallRating || 0), 0) / totalReviews
-      : 0;
-    
-    const positiveReviews = reviews.filter(review => (review.overallRating || 0) >= 8).length;
-    const negativeReviews = reviews.filter(review => (review.overallRating || 0) < 6).length;
-    
-    return {
-      totalReviews,
-      avgRating: avgRating, // Keep as number
-      avgRatingDisplay: avgRating.toFixed(1), // For display
-      positivePercentage: totalReviews > 0 ? Math.round((positiveReviews / totalReviews) * 100) : 0,
-      negativePercentage: totalReviews > 0 ? Math.round((negativeReviews / totalReviews) * 100) : 0
-    };
-  };
-
-  const stats = calculateStats();
-
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-96">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-indigo-600"></div>
-        <span className="ml-4 text-xl text-gray-700">Loading property details...</span>
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-cyan-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="relative inline-flex">
+            <div className="w-16 h-16 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full animate-ping absolute opacity-20"></div>
+            <FiLoader className="animate-spin h-16 w-16 text-indigo-600 mx-auto relative z-10" />
+          </div>
+          <p className="text-xl font-bold text-indigo-800 mt-6">
+            Loading Property Insights
+          </p>
+          <p className="text-indigo-600 mt-2">Analyzing guest experiences...</p>
+        </div>
       </div>
     );
   }
 
-  return (
-    <div className="space-y-8">
-      {/* Premium Property Header */}
-      <div className="bg-gradient-to-r from-indigo-600 to-purple-700 rounded-2xl shadow-xl p-8 text-white">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-          <div>
-            <Link 
-              to="/" 
-              className="inline-flex items-center text-indigo-200 hover:text-white transition-colors"
-            >
-              <svg className="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
-              </svg>
-              Back to Dashboard
-            </Link>
-            <h1 className="mt-4 text-3xl font-bold">
-              {decodeURIComponent(listingName || 'Property Reviews')}
-            </h1>
-            <p className="mt-2 text-indigo-100">Guest feedback and performance insights</p>
-          </div>
-          <div className="mt-6 md:mt-0">
-            <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-xl p-6">
-              <div className="flex items-center">
-                <div className="flex-shrink-0 h-16 w-16 rounded-full bg-gradient-to-br from-yellow-300 to-orange-400 flex items-center justify-center">
-                  <span className="text-2xl font-bold text-gray-900">
-                    {stats.avgRatingDisplay}
-                  </span>
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm text-indigo-200">Average Rating</p>
-                  <p className="text-2xl font-bold">{stats.totalReviews} Reviews</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        {/* Stats Cards */}
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-xl p-4">
-            <p className="text-indigo-200 text-sm">Positive Reviews</p>
-            <p className="text-2xl font-bold mt-1">{stats.positivePercentage}%</p>
-            <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
-              <div 
-                className="bg-green-400 h-2 rounded-full" 
-                style={{ width: `${stats.positivePercentage}%` }}
-              ></div>
-            </div>
-          </div>
-          <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-xl p-4">
-            <p className="text-indigo-200 text-sm">Needs Attention</p>
-            <p className="text-2xl font-bold mt-1">{stats.negativePercentage}%</p>
-            <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
-              <div 
-                className="bg-red-400 h-2 rounded-full" 
-                style={{ width: `${stats.negativePercentage}%` }}
-              ></div>
-            </div>
-          </div>
-          <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-xl p-4">
-            <p className="text-indigo-200 text-sm">Performance</p>
-            <p className="text-2xl font-bold mt-1">
-              {stats.avgRating >= 8 ? 'Excellent' : 
-               stats.avgRating >= 6 ? 'Good' : 'Needs Work'}
-            </p>
-            <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
-              <div 
-                className={`h-2 rounded-full ${
-                  stats.avgRating >= 8 ? 'bg-green-400' : 
-                  stats.avgRating >= 6 ? 'bg-yellow-400' : 'bg-red-400'
-                }`} 
-                style={{ width: `${(stats.avgRating / 10) * 100}%` }}
-              ></div>
-            </div>
-          </div>
-        </div>
-      </div>
+  const filteredReviews =
+    selectedTab === "all"
+      ? reviews
+      : selectedTab === "positive"
+      ? reviews.filter((r) => (r.overallRating || 0) >= 8)
+      : reviews.filter(
+          (r) =>
+            new Date(r.submittedAt) >
+            new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+        );
 
-      {/* Premium Reviews Section */}
-      <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
-        <div className="px-6 py-5 border-b border-gray-200">
-          <h2 className="text-xl font-bold text-gray-900">
-            Guest Reviews
-          </h2>
-          <p className="mt-1 text-sm text-gray-500">
-            Feedback from guests who stayed at this property
-          </p>
-        </div>
-        
-        <div className="divide-y divide-gray-200">
-          {reviews.length > 0 ? (
-            reviews.map((review) => (
-              <div key={review.id} className="px-6 py-6 hover:bg-gray-50 transition-all">
-                <div className="flex items-start">
-                  <div className="flex-shrink-0">
-                    <div className="bg-gradient-to-br from-indigo-100 to-purple-100 h-12 w-12 rounded-full flex items-center justify-center">
-                      <span className="text-lg font-bold text-indigo-800">
-                        {review.guestName.charAt(0)}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="ml-4 flex-1">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="text-lg font-bold text-gray-900">
-                          {review.guestName}
-                        </h3>
-                        <p className="text-sm text-gray-500">
-                          {new Date(review.submittedAt).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <div className={`flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center ${
-                          (review.overallRating || 0) >= 8 ? 'bg-green-100' :
-                          (review.overallRating || 0) >= 6 ? 'bg-yellow-100' :
-                          'bg-red-100'
-                        }`}>
-                          <span className={`text-base font-bold ${
-                            (review.overallRating || 0) >= 8 ? 'text-green-800' :
-                            (review.overallRating || 0) >= 6 ? 'text-yellow-800' :
-                            'text-red-800'
-                          }`}>
-                            {review.overallRating !== null ? review.overallRating : 'N/A'}
-                          </span>
-                        </div>
-                        <div className="flex space-x-2">
-                          <span className={`px-2 py-1 text-xs rounded-full font-medium ${
-                            review.status === 'published' ? 'bg-green-100 text-green-800' :
-                            review.status === 'draft' ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-gray-100 text-gray-800'
-                          }`}>
-                            {review.status.charAt(0).toUpperCase() + review.status.slice(1)}
-                          </span>
-                          <span className="px-2 py-1 text-xs rounded-full font-medium bg-indigo-100 text-indigo-800">
-                            {review.channel}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="mt-3">
-                      <p className="text-gray-700">"{review.publicReview}"</p>
-                    </div>
-                    {review.categories.length > 0 && (
-                      <div className="mt-4">
-                        <h4 className="text-sm font-medium text-gray-900">Detailed Ratings</h4>
-                        <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-                          {review.categories.map((category, index) => (
-                            <div key={index} className="flex items-center justify-between bg-gray-50 rounded-lg p-3">
-                              <span className="text-sm text-gray-700">{category.category}</span>
-                              <div className="flex items-center">
-                                <span className="text-sm font-medium text-gray-900 mr-2">
-                                  {category.rating}/10
-                                </span>
-                                <div className={`h-2 w-16 rounded-full ${
-                                  category.rating >= 8 ? 'bg-green-200' :
-                                  category.rating >= 6 ? 'bg-yellow-200' :
-                                  'bg-red-200'
-                                }`}>
-                                  <div 
-                                    className={`h-2 rounded-full ${
-                                      category.rating >= 8 ? 'bg-green-500' :
-                                      category.rating >= 6 ? 'bg-yellow-500' :
-                                      'bg-red-500'
-                                    }`}
-                                    style={{ width: `${category.rating * 10}%` }}
-                                  ></div>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="text-center py-16">
-              <svg className="mx-auto h-16 w-16 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-              </svg>
-              <h3 className="mt-4 text-lg font-medium text-gray-900">No reviews yet</h3>
-              <p className="mt-1 text-sm text-gray-500">
-                This property doesn't have any reviews yet.
-              </p>
+  // Calculate property stats
+  const propertyStats = {
+    totalReviews: reviews.length,
+    avgRating:
+      reviews.length > 0
+        ? (
+            reviews.reduce((sum, r) => sum + (r.overallRating || 0), 0) /
+            reviews.length
+          ).toFixed(1)
+        : "N/A",
+    positiveReviews: reviews.filter((r) => (r.overallRating || 0) >= 8).length,
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-cyan-50">
+      {/* Header */}
+      <header className="modern-dashboard-header">
+        <div className="modern-dashboard-header-content">
+          <div>
+            <h1 className="modern-dashboard-title flex items-center gap-3">
+              <FiHome className="text-indigo-600" />
+              {property?.name || "Property Details"}
+            </h1>
+            <p className="modern-dashboard-subtitle">
+              Detailed insights and guest reviews for this property
+            </p>
+          </div>
+          <div className="modern-dashboard-stats">
+            <div className="modern-dashboard-stat-badge">
+              <FiBarChart2 className="text-indigo-600" />
+              <span>{propertyStats.totalReviews} Reviews</span>
             </div>
-          )}
+          </div>
         </div>
-      </div>
+      </header>
+
+      <main className="max-w-7xl mx-auto px-6 py-10 space-y-10">
+        {/* Property Details */}
+        {property && <PropertyDetails property={property} />}
+
+        {/* Stats Overview */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="modern-stat-card bg-gradient-to-br from-indigo-500 to-purple-600">
+            <div className="modern-stat-card-icon bg-white/20">
+              <FiBarChart2 />
+            </div>
+            <div className="modern-stat-card-value">
+              {propertyStats.totalReviews}
+            </div>
+            <div className="modern-stat-card-title">Total Reviews</div>
+          </div>
+
+          <div className="modern-stat-card bg-gradient-to-br from-amber-500 to-orange-500">
+            <div className="modern-stat-card-icon bg-white/20">
+              <FiStar />
+            </div>
+            <div className="modern-stat-card-value">
+              {propertyStats.avgRating}
+            </div>
+            <div className="modern-stat-card-title">Average Rating</div>
+          </div>
+
+          <div className="modern-stat-card bg-gradient-to-br from-green-500 to-emerald-600">
+            <div className="modern-stat-card-icon bg-white/20">
+              <FiTrendingUp />
+            </div>
+            <div className="modern-stat-card-value">
+              {propertyStats.totalReviews > 0
+                ? Math.round(
+                    (propertyStats.positiveReviews /
+                      propertyStats.totalReviews) *
+                      100
+                  )
+                : 0}
+              %
+            </div>
+            <div className="modern-stat-card-title">Positive Reviews</div>
+          </div>
+        </div>
+
+        {/* Reviews Section */}
+        <div className="modern-action-card">
+          {/* Tabs */}
+          <div className="flex flex-wrap gap-2 mb-6">
+            {(["all", "positive", "recent"] as const).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setSelectedTab(tab)}
+                className={`px-5 py-2.5 text-sm font-semibold rounded-lg transition-all ${
+                  selectedTab === tab
+                    ? "bg-gradient-to-r from-indigo-600 to-purple-700 text-white shadow-md"
+                    : "bg-white text-slate-600 hover:bg-indigo-50"
+                }`}
+              >
+                {tab === "all"
+                  ? "All Reviews"
+                  : tab === "positive"
+                  ? "Top Rated"
+                  : "Recent"}
+              </button>
+            ))}
+          </div>
+
+          {/* Selected Reviews */}
+          <div className="mt-6">
+            <SelectedReviews reviews={filteredReviews} />
+            {filteredReviews.length === 0 && (
+              <div className="text-center py-16 bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl">
+                <FiStar className="mx-auto h-12 w-12 text-slate-300 mb-4" />
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                  No Reviews in This Category
+                </h3>
+                <p className="text-slate-600 max-w-md mx-auto">
+                  There are no reviews matching your current filter. Try
+                  selecting a different category.
+                </p>
+                <button
+                  onClick={() => setSelectedTab("all")}
+                  className="mt-4 px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-700 text-white rounded-lg font-medium hover:from-indigo-700 hover:to-purple-800 transition-all"
+                >
+                  View All Reviews
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </main>
     </div>
   );
 };
