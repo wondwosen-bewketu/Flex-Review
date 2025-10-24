@@ -6,11 +6,12 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Enable CORS
+  // Enable CORS with more permissive settings for Vercel
   app.enableCors({
-    origin: true,
+    origin: '*',
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
+    allowedHeaders: 'Content-Type, Authorization',
   });
 
   // Configure Swagger
@@ -25,6 +26,12 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('docs', app, document);
 
-  await app.listen(appConfig.port);
+  // Use Vercel's PORT environment variable or default to 3000
+  const port = process.env.PORT || appConfig.port || 3000;
+  await app.listen(port);
+  
+  // Log the port for debugging
+  console.log(`Application is running on: ${await app.getUrl()}`);
 }
+
 bootstrap();
