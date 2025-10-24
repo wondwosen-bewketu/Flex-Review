@@ -165,7 +165,7 @@ The application includes basic error handling for API failures. Review the logs 
 
 ### Database
 
-For production use, replace the localStorage-based review selection with a proper database solution:
+For production use, replace the in-memory storage with a proper database solution:
 - PostgreSQL or MongoDB for storing selected reviews
 - Redis for caching frequently accessed data
 

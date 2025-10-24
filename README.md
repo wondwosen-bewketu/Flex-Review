@@ -1,20 +1,20 @@
-# Flex Living Reviews Dashboard
+# Flex Living - Developer Assessment
 
 ## Project Overview
 
-This is a full-stack web application built as part of the Flex Living hiring process. The application provides a comprehensive dashboard for property managers to monitor and analyze guest reviews, as well as a public-facing property page to display selected reviews.
+This is a full-stack web application built as part of the Flex Living developer assessment. The application provides a comprehensive dashboard for property managers to monitor and analyze guest reviews, as well as a public-facing property page to display selected reviews.
 
 ## Tech Stack
 
 ### Backend
-- **NestJS** - A progressive Node.js framework for building efficient, reliable and scalable server-side applications
-- **TypeScript** - Strongly typed programming language that builds on JavaScript
+- **NestJS** - Progressive Node.js framework for building efficient, reliable and scalable server-side applications
+- **TypeScript** - Strongly typed programming language
 
 ### Frontend
-- **React** - A JavaScript library for building user interfaces
+- **React** - JavaScript library for building user interfaces
 - **Vite** - Next generation frontend tooling
-- **TypeScript** - Strongly typed programming language that builds on JavaScript
-- **Tailwind CSS** - A utility-first CSS framework for rapidly building custom user interfaces
+- **TypeScript** - Strongly typed programming language
+- **Tailwind CSS** - Utility-first CSS framework
 
 ## Key Features
 
@@ -28,7 +28,6 @@ This is a full-stack web application built as part of the Flex Living hiring pro
 - Filter or sort by rating, category, channel, or time
 - Spot trends or recurring issues
 - Select which reviews should be displayed on the public website
-- Table and card view options
 - Property performance metrics
 
 ### 3. Review Display Page
@@ -58,7 +57,7 @@ Returns Google reviews for a specific listing (mocked).
 ```
 POST /api/reviews/selected
 ```
-Saves selected review IDs.
+Saves selected review IDs for a specific property.
 
 ```
 GET /api/reviews/selected/:listingName
@@ -114,7 +113,7 @@ flex-reviews-frontend/
 - Trend identification and alerts for issues
 
 ### Review Selection
-- Backend persistence for selected reviews
+- Backend persistence for selected reviews using in-memory storage
 - In production, this would be replaced with database storage
 - Frontend fallback to localStorage for offline support
 
@@ -166,10 +165,69 @@ flex-reviews-frontend/
 
 4. The frontend will be running on http://localhost:5173 (or next available port)
 
+## Deployment
+
+Both the frontend and backend can be deployed to Vercel:
+
+### Prerequisites
+1. Create accounts on [Vercel](https://vercel.com/) (free tier available)
+2. Install Vercel CLI: `npm install -g vercel`
+3. Login to Vercel CLI: `vercel login`
+
+### Backend Deployment (NestJS API)
+1. Navigate to the backend directory:
+   ```bash
+   cd flex-reviews-backend
+   ```
+
+2. Deploy the project:
+   ```bash
+   vercel
+   ```
+
+3. Follow the prompts to configure your deployment:
+   - Set up and deploy to Vercel
+   - Choose the default settings
+   - Set environment variables in the Vercel dashboard:
+     - `HOSTAWAY_ACCOUNT_ID` = your_account_id
+     - `HOSTAWAY_API_KEY` = your_api_key
+     - `GOOGLE_PLACES_API_KEY` = your_google_api_key (optional)
+
+4. Deploy to production:
+   ```bash
+   vercel --prod
+   ```
+
+### Frontend Deployment (React Dashboard)
+1. Update the API base URL in the frontend code:
+   - Open `flex-reviews-frontend/src/pages/Dashboard.tsx`
+   - Replace `const API_BASE = "http://localhost:3000";` with your deployed backend URL
+
+2. Navigate to the frontend directory:
+   ```bash
+   cd flex-reviews-frontend
+   ```
+
+3. Deploy the project:
+   ```bash
+   vercel
+   ```
+
+4. Deploy to production:
+   ```bash
+   vercel --prod
+   ```
+
+### Environment Variables
+Set these environment variables in the Vercel dashboard for the backend:
+- `HOSTAWAY_ACCOUNT_ID` - Your Hostaway account ID
+- `HOSTAWAY_API_KEY` - Your Hostaway API key
+- `GOOGLE_PLACES_API_KEY` - Your Google Places API key (optional)
+
 ## Evaluation Criteria Addressed
 
 ### Handling and Normalization of Real-World JSON Review Data
-- Implemented comprehensive data normalization in the [ReviewsService](file:///d%3A/Code%20Collection/flex-reviews/flex-reviews-backend/src/reviews/reviews.service.ts#L53-L82)
+- Implemented comprehensive data normalization in the ReviewsService
 - Added channel information and date bucketing for better data organization
 
 ### Code Clarity and Structure
@@ -179,7 +237,6 @@ flex-reviews-frontend/
 
 ### UX/UI Design Quality and Decision-Making
 - Modern, responsive UI built with Tailwind CSS
-- Multiple view options (table and card views)
 - Comprehensive filtering and sorting capabilities
 - Visual indicators for ratings and statuses
 - Trend identification and alerts
@@ -203,7 +260,7 @@ flex-reviews-frontend/
    - Role-based access control for different user types
 
 2. **Database Integration**
-   - Replace localStorage with a proper database solution
+   - Replace in-memory storage with a proper database solution
    - Implement review selection persistence on the backend
 
 3. **Real API Integration**
@@ -222,14 +279,7 @@ flex-reviews-frontend/
 
 - [Deployment Guide](DEPLOYMENT.md) - Instructions for deploying to production
 - [Usage Guide](USAGE.md) - How to use the application effectively
-
-## Deployment
-
-Both the frontend and backend can be deployed to Vercel:
-- Backend: Vercel Serverless Functions
-- Frontend: Vercel Static Site Hosting
-
-Update the `API_BASE` constant in the frontend to point to your deployed backend URL.
+- [Deployment Instructions](DEPLOYMENT_INSTRUCTIONS.md) - Step-by-step deployment guide
 
 ## Conclusion
 
