@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react'
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: './', // This ensures relative paths are used for assets
+  base: './', // ensures relative asset paths on Vercel
   plugins: [
     react({
       babel: {
@@ -11,20 +11,11 @@ export default defineConfig({
       },
     }),
   ],
-  server: {
-    proxy: {
-      "/api": {
-        target: "https://flex-reviews-backend-c7vjr6ir0-wondwosen-bewketus-projects.vercel.app",
-        changeOrigin: true,
-        secure: false,
-      },
-    },
-  },
   build: {
     rollupOptions: {
       output: {
-        manualChunks: undefined, // This can help with module loading issues
+        manualChunks: undefined, // avoids chunk splitting issues
       },
     },
   },
-});
+})
